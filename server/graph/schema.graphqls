@@ -1,0 +1,61 @@
+# GraphQL schema example
+#
+# https://gqlgen.com/getting-started/
+
+type Todo {
+  id: ID!
+  text: String!
+  done: Boolean!
+  user: User!
+}
+
+type User {
+  id: ID!
+  name: String!
+}
+
+type Trade {
+  id: ID!
+  leftCoin: String!
+  rightCoin: String!
+  amountFirstCoin: Float!
+  CreationTime: String!
+  BuyPrice: Float!
+}
+
+type StopLossFollower {
+  trade: Trade!
+  FollowUpPercent: Float!
+  InitialStopLossPrice: Float!
+  CurrentStopLossPrice: Float!
+  SoldTime: String
+}
+
+type Query {
+  todos: [Todo!]!
+}
+
+input NewSession {
+  signature: String!,
+  message: String!
+}
+
+input NewTrade {
+  leftCoin: String!
+  rightCoin: String!
+  amountLeftCoin: Float!
+  MarketBuy: Boolean!
+  BuyPrice: Float
+}
+
+input NewStopLossFollower {
+  tradeID: ID!
+  FollowUpPercent: Float!
+  InitialStopLossPrice: Float!
+}
+
+type Mutation {
+  createSession(input: NewSession!): String!
+  createTrade(input: NewTrade): Trade!
+  createStopLossFollower(input: NewStopLossFollower!): StopLossFollower!
+}
