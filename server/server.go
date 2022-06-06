@@ -2,6 +2,7 @@ package main
 
 import (
 	"blarsy/traderServer/auth"
+	"blarsy/traderServer/data"
 	"blarsy/traderServer/graph"
 	"blarsy/traderServer/graph/generated"
 	"fmt"
@@ -23,6 +24,10 @@ func Start() {
 	if err != nil {
 		panic(err)
 	}
+
+	dataFacade := data.DataFacade{}
+	dataFacade.Init()
+
 	router := chi.NewRouter()
 
 	router.Use(cors.New(cors.Options{
@@ -30,7 +35,7 @@ func Start() {
 		AllowCredentials: true,
 		AllowedHeaders:   []string{"Authorization", "Content-Type"},
 	}).Handler)
-	router.Use(auth.Middleware(&sessionManager))
+	router.Use(auth.Middleware(&sessionManager, &dataFacade))
 
 	srv := handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &graph.Resolver{}}))
 	router.Handle("/", playground.Handler("GraphQL playground", "/query"))

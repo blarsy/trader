@@ -1,41 +1,15 @@
-import { createContext, useContext, useState } from 'react'
+import { createContext, useContext, useState, useEffect } from 'react'
+import { gql, useMutation } from '@apollo/client';
 import { ethers } from 'ethers'
 import { Button, Snackbar, Alert, Backdrop, CircularProgress } from '@mui/material'
-import { ApolloClient, InMemoryCache, createHttpLink, ApolloProvider, gql, useMutation } from '@apollo/client';
-import { setContext } from '@apollo/client/link/context'
+import Dashboard from '../pages/components/dashboard'
+import ApolloRoot, { client } from '../pages/components/apolloRoot'
 
-const httpLink = createHttpLink({
-  uri: 'http://localhost:8080/query',
-})
-const authLink = setContext((_, { headers }) => {
-  // get the authentication token from local storage if it exists
-  const token = localStorage.getItem('sessionId');
-  // return the headers to the context so httpLink can read them
-  if(token) {
-    return {
-      headers: {
-        ...headers,
-        authorization: token,
-      }
-    }
-  }
-  return { headers }
-
-})
-const client = new ApolloClient({
-  link: authLink.concat(httpLink),
-  cache: new InMemoryCache(),
-  // Enable sending cookies over cross-origin requests
-  credentials: 'include'
-})
 const AppContext = createContext();
 
 let ethereum
 
 export function AppWrapper({ children }) {
-  const [createSession, {sessionData, processing}] = useMutation(gql`mutation CreateSession($signature: String!, $message: String!){
-    createSession(input: {signature: $signature, message: $message})
-  }`, { client })
   const tryConnect = async () => {
     try {
         const { provider, signer, walletAddress } = await ensureWalletInitialized()
@@ -44,7 +18,6 @@ export function AppWrapper({ children }) {
         await createSession({ 
           variables: {signature, message: timestamp}, 
           onCompleted: res => {
-            console.log(res.createSession)
             localStorage.setItem('sessionId',res.createSession)
             mergeWithState(state, { 
               walletAddress,
@@ -75,6 +48,7 @@ export function AppWrapper({ children }) {
 
   const restoreFromSessionId = async () => {
     const { provider, signer, walletAddress } = await ensureWalletInitialized()
+
     mergeWithState(state, { 
       walletAddress,
       provider,
@@ -99,15 +73,6 @@ export function AppWrapper({ children }) {
     mergeWithState(oldState, errorData)
   }
 
-  const [state, setState] = useState({
-    walletAddress: null,
-    tryConnect,
-    mergeWithState,
-    restoreFromSessionId,
-    autoConnecting:false,
-    setError
-  })
-
   const ensureWalletInitialized = async () => {
     if(!ethereum){
       ethereum = window.ethereum
@@ -120,16 +85,31 @@ export function AppWrapper({ children }) {
       return { provider, signer, walletAddress }
     }
   }
+  const [state, setState] = useState({
+    walletAddress: null,
+    tryConnect,
+    mergeWithState,
+    autoConnecting:false,
+    setError
+  })
+  const [createSession, {sessionData, processing}] = useMutation(gql`mutation CreateSession($signature: String!, $message: String!){
+    createSession(input: {signature: $signature, message: $message})
+  }`, { client })
+
+  useEffect(async () => {
+    if(localStorage.getItem('sessionId') && !state.sessionId) {
+      await restoreFromSessionId()
+    }
+  }, [])
 
   const dismissErrorMsg = () => setError(state)
 
   return (
     <AppContext.Provider value={[state, setState]}>
-      <ApolloProvider client={client}>
-      <Backdrop
-          open={!!processing}
-        >
-          <CircularProgress color="inherit" />
+      <ApolloRoot>
+        <Backdrop
+            open={!!processing}>
+            <CircularProgress color="inherit" />
         </Backdrop>
         <Snackbar
           open={!!state.errorMsg}
@@ -143,8 +123,10 @@ export function AppWrapper({ children }) {
               </Button>}
           </Alert>
         </Snackbar>
-        {children}
-      </ApolloProvider>
+        <Dashboard>
+          {children}
+        </Dashboard>
+      </ApolloRoot>
     </AppContext.Provider>
   );
 }

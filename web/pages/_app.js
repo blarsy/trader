@@ -4,7 +4,7 @@ import Head from 'next/head'
 import { Container } from '@mui/system'
 
 function MyApp({ Component, pageProps }) {
-  return <Container>
+  return <Container sx={{display: 'flex', flexDirection: 'column'}}>
     <AppWrapper>
       <Head>
         <title>My personal trader</title>
@@ -12,7 +12,7 @@ function MyApp({ Component, pageProps }) {
         <meta name="viewport" content="initial-scale=1, width=device-width" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
-      <Box display="flex" justifyContent="center" padding="2rem">
+      <Box display="flex" flexDirection="column" padding="2rem">
         <Component {...pageProps} />
       </Box>
     </AppWrapper>

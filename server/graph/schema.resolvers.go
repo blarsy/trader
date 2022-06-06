@@ -33,8 +33,22 @@ func (r *mutationResolver) CreateStopLossFollower(ctx context.Context, input mod
 	panic(fmt.Errorf("not implemented"))
 }
 
-func (r *queryResolver) Todos(ctx context.Context) ([]*model.Todo, error) {
-	panic(fmt.Errorf("not implemented"))
+func (r *queryResolver) Trades(ctx context.Context) ([]*model.Trade, error) {
+	reqCtx := auth.ForContext(ctx)
+	trades, err := reqCtx.DataFacade.LocalFile.GetTrades()
+	if err != nil {
+		return nil, err
+	}
+	return trades, nil
+}
+
+func (r *queryResolver) Markets(ctx context.Context) ([]*model.Market, error) {
+	reqCtx := auth.ForContext(ctx)
+	markets, err := reqCtx.DataFacade.LocalFile.GetMarkets()
+	if err != nil {
+		return nil, err
+	}
+	return markets, nil
 }
 
 // Mutation returns generated.MutationResolver implementation.

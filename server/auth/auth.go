@@ -7,6 +7,8 @@ import (
 	"net/http"
 	"time"
 
+	"blarsy/traderServer/data"
+
 	"github.com/ethereum/go-ethereum/accounts"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/crypto"
@@ -18,8 +20,9 @@ type SessionManager struct {
 	ActiveSessionsNonce map[string]int64
 }
 
-type RequestSession struct {
+type RequestContext struct {
 	SessionManager *SessionManager
+	DataFacade     *data.DataFacade
 	SessionId      string
 	Nonce          int64
 }
@@ -63,12 +66,15 @@ func (sessionManager *SessionManager) CreateSession(sigHex string, msg string) (
 	return sessionId, nil
 }
 
-func Middleware(sessionManager *SessionManager) func(http.Handler) http.Handler {
+func Middleware(sessionManager *SessionManager, dataFacade *data.DataFacade) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			sessionUuidCookie, err := r.Cookie("auth-cookie")
 
-			requestSession := RequestSession{SessionManager: sessionManager}
+			requestContext := RequestContext{
+				SessionManager: sessionManager,
+				DataFacade:     dataFacade,
+			}
 
 			// Allow unauthenticated users in
 			if err == nil && sessionUuidCookie != nil {
@@ -78,12 +84,12 @@ func Middleware(sessionManager *SessionManager) func(http.Handler) http.Handler 
 					return
 				} else {
 					// put it in context
-					requestSession.Nonce = nonce
-					requestSession.SessionId = sessionUuidCookie.Value
+					requestContext.Nonce = nonce
+					requestContext.SessionId = sessionUuidCookie.Value
 				}
 			}
 
-			ctx := context.WithValue(r.Context(), SessionKey, requestSession)
+			ctx := context.WithValue(r.Context(), SessionKey, requestContext)
 
 			// and call the next with our new context
 			r = r.WithContext(ctx)
@@ -94,7 +100,7 @@ func Middleware(sessionManager *SessionManager) func(http.Handler) http.Handler 
 }
 
 // ForContext finds the user from the context. REQUIRES Middleware to have run.
-func ForContext(ctx context.Context) *RequestSession {
-	raw, _ := ctx.Value(SessionKey).(RequestSession)
+func ForContext(ctx context.Context) *RequestContext {
+	raw, _ := ctx.Value(SessionKey).(RequestContext)
 	return &raw
 }

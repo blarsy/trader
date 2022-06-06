@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react'
 import Connect from './components/connect'
-import Dashboard from './components/Dashboard'
 import { useAppContext } from '../lib/appState'
 
 export default function Home() {
@@ -14,7 +13,7 @@ export default function Home() {
   
   return (
     <main>
-      {loaded ? <Dashboard/> : <Connect/> }
+      {!loaded && <Connect/> }
     </main>
   )
 }

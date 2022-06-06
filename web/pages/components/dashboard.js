@@ -1,12 +1,19 @@
-import {useState, useEffect} from 'react'
-import { Button } from "@mui/material"
+import { Link, MenuItem, MenuList, Stack } from '@mui/material'
+import { Box } from '@mui/system'
+import {useAppContext} from '../../lib/appState'
 
-export default function Dashboard() {
-    const [trades, setTrades] = useState(null)
-
-    useEffect(async () => {
-        //load trades
-    },trades)
-
-    return <Button href="#/trades/new">Take Trade</Button>
+export default function Dashboard({ children }) {
+    const [appState] = useAppContext()
+    if(!appState.sessionId) {
+        return children
+    }
+    return <Stack direction="row">
+        <MenuList>
+            <MenuItem><Link href="/trade">Trades</Link></MenuItem>
+            <MenuItem><Link href="/sniper">Sniper</Link></MenuItem>
+        </MenuList>
+        <Box sx={{display: 'flex', flexDirection: 'column', justifyContent: 'stretch', flexGrow: 1}}>
+            {children}
+        </Box>
+    </Stack>
 }

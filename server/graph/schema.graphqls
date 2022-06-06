@@ -18,21 +18,22 @@ type Trade {
   id: ID!
   leftCoin: String!
   rightCoin: String!
-  amountFirstCoin: Float!
-  CreationTime: String!
-  BuyPrice: Float!
+  amountLeftCoin: Float!
+  creationTime: String!
+  buyPrice: Float!
+}
+
+type Market {
+  leftCoin: String!
+  rightCoin: String!
 }
 
 type StopLossFollower {
   trade: Trade!
-  FollowUpPercent: Float!
-  InitialStopLossPrice: Float!
-  CurrentStopLossPrice: Float!
-  SoldTime: String
-}
-
-type Query {
-  todos: [Todo!]!
+  followUpPercent: Float!
+  initialStopLossPrice: Float!
+  currentStopLossPrice: Float!
+  soldTime: String
 }
 
 input NewSession {
@@ -44,14 +45,19 @@ input NewTrade {
   leftCoin: String!
   rightCoin: String!
   amountLeftCoin: Float!
-  MarketBuy: Boolean!
-  BuyPrice: Float
+  marketBuy: Boolean!
+  buyPrice: Float
 }
 
 input NewStopLossFollower {
   tradeID: ID!
-  FollowUpPercent: Float!
-  InitialStopLossPrice: Float!
+  followUpPercent: Float!
+  initialStopLossPrice: Float!
+}
+
+type Query {
+  trades: [Trade!]!
+  markets: [Market!]!
 }
 
 type Mutation {
