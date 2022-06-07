@@ -14,7 +14,7 @@ type NewSession struct {
 
 type NewStopLossFollower struct {
 	TradeID              string  `json:"tradeID"`
-	IfollowUpPercent     float64 `json:"ifollowUpPercent"`
+	FollowUpPercent      float64 `json:"followUpPercent"`
 	InitialStopLossPrice float64 `json:"initialStopLossPrice"`
 }
 

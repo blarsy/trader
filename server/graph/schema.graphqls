@@ -62,6 +62,6 @@ type Query {
 
 type Mutation {
   createSession(input: NewSession!): String!
-  createTrade(input: NewTrade): Trade!
+  createTrade(input: NewTrade): String!
   createStopLossFollower(input: NewStopLossFollower!): StopLossFollower!
 }

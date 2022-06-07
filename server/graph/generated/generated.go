@@ -92,7 +92,7 @@ type ComplexityRoot struct {
 
 type MutationResolver interface {
 	CreateSession(ctx context.Context, input model.NewSession) (string, error)
-	CreateTrade(ctx context.Context, input *model.NewTrade) (*model.Trade, error)
+	CreateTrade(ctx context.Context, input *model.NewTrade) (string, error)
 	CreateStopLossFollower(ctx context.Context, input model.NewStopLossFollower) (*model.StopLossFollower, error)
 }
 type QueryResolver interface {
@@ -422,7 +422,7 @@ input NewTrade {
 
 input NewStopLossFollower {
   tradeID: ID!
-  ifollowUpPercent: Float!
+  followUpPercent: Float!
   initialStopLossPrice: Float!
 }
 
@@ -433,7 +433,7 @@ type Query {
 
 type Mutation {
   createSession(input: NewSession!): String!
-  createTrade(input: NewTrade): Trade!
+  createTrade(input: NewTrade): String!
   createStopLossFollower(input: NewStopLossFollower!): StopLossFollower!
 }
 `, BuiltIn: false},
@@ -711,9 +711,9 @@ func (ec *executionContext) _Mutation_createTrade(ctx context.Context, field gra
 		}
 		return graphql.Null
 	}
-	res := resTmp.(*model.Trade)
+	res := resTmp.(string)
 	fc.Result = res
-	return ec.marshalNTrade2ᚖblarsyᚋtraderServerᚋgraphᚋmodelᚐTrade(ctx, field.Selections, res)
+	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_createTrade(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -723,21 +723,7 @@ func (ec *executionContext) fieldContext_Mutation_createTrade(ctx context.Contex
 		IsMethod:   true,
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_Trade_id(ctx, field)
-			case "leftCoin":
-				return ec.fieldContext_Trade_leftCoin(ctx, field)
-			case "rightCoin":
-				return ec.fieldContext_Trade_rightCoin(ctx, field)
-			case "amountLeftCoin":
-				return ec.fieldContext_Trade_amountLeftCoin(ctx, field)
-			case "creationTime":
-				return ec.fieldContext_Trade_creationTime(ctx, field)
-			case "buyPrice":
-				return ec.fieldContext_Trade_buyPrice(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type Trade", field.Name)
+			return nil, errors.New("field of type String does not have child fields")
 		},
 	}
 	defer func() {
@@ -3644,11 +3630,11 @@ func (ec *executionContext) unmarshalInputNewStopLossFollower(ctx context.Contex
 			if err != nil {
 				return it, err
 			}
-		case "ifollowUpPercent":
+		case "followUpPercent":
 			var err error
 
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("ifollowUpPercent"))
-			it.IfollowUpPercent, err = ec.unmarshalNFloat2float64(ctx, v)
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("followUpPercent"))
+			it.FollowUpPercent, err = ec.unmarshalNFloat2float64(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -4563,10 +4549,6 @@ func (ec *executionContext) marshalNString2string(ctx context.Context, sel ast.S
 		}
 	}
 	return res
-}
-
-func (ec *executionContext) marshalNTrade2blarsyᚋtraderServerᚋgraphᚋmodelᚐTrade(ctx context.Context, sel ast.SelectionSet, v model.Trade) graphql.Marshaler {
-	return ec._Trade(ctx, sel, &v)
 }
 
 func (ec *executionContext) marshalNTrade2ᚕᚖblarsyᚋtraderServerᚋgraphᚋmodelᚐTradeᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Trade) graphql.Marshaler {

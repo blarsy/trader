@@ -35,7 +35,7 @@ export default function Trade() {
             label="Amount coins" 
             required
             size="small" 
-            error={validations.amountLeftCoin}
+            error={!!validations.amountLeftCoin}
             helperText={validations.amountLeftCoin}
             value={newTrade.amountLeftCoin} 
             onChange={e => {
@@ -58,7 +58,7 @@ export default function Trade() {
             size="small"
             disabled={newTrade.buyFromMarket}
             required={!newTrade.buyFromMarket}
-            error={validations.buyPrice}
+            error={!!validations.buyPrice}
             helperText={validations.buyPrice}
             value={newTrade.buyPrice}
             onChange={e => {
@@ -71,7 +71,7 @@ export default function Trade() {
                 }
                 setValidations({...validations, ...{ buyPrice: validationMessage }})
             }}/>
-        <Button variant="outlined" disabled={validations !== {}} onClick={() => {
+        <Button variant="outlined" disabled={validations != {}} onClick={() => {
             console.log(newTrade)
         }}>Ok</Button>
     </Stack>

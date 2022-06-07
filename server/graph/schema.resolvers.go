@@ -23,9 +23,18 @@ func (r *mutationResolver) CreateSession(ctx context.Context, input model.NewSes
 	}
 }
 
-func (r *mutationResolver) CreateTrade(ctx context.Context, input *model.NewTrade) (*model.Trade, error) {
-	fmt.Printf("%#v\n", input)
-	panic(fmt.Errorf("not implemented"))
+func (r *mutationResolver) CreateTrade(ctx context.Context, input *model.NewTrade) (string, error) {
+	if input.MarketBuy {
+		//TODO: First buy from the market, then fill the buyprice and creationTime accordingly
+	} else {
+		//TODO: check whether there are actually <AmountLeftCoin> present and available on the underlying exchange account
+	}
+	reqCtx := auth.ForContext(ctx)
+	idNewTrade, err := reqCtx.DataFacade.LocalFile.CreateTrade(input)
+	if err != nil {
+		return "", err
+	}
+	return idNewTrade, nil
 }
 
 func (r *mutationResolver) CreateStopLossFollower(ctx context.Context, input model.NewStopLossFollower) (*model.StopLossFollower, error) {
