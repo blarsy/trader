@@ -2,7 +2,7 @@ import { DateTime } from 'luxon'
 import { Button, Box, CircularProgress } from "@mui/material"
 import { useMutation, useQuery, gql } from '@apollo/client'
 import {Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper } from '@mui/material'
-import Link from 'next/link'
+import Link from './components/link'
 import { useAppContext } from '../lib/appState'
 
 export default function Trade() {
@@ -11,10 +11,8 @@ export default function Trade() {
         trades { id, leftCoin, rightCoin, buyPrice, amountLeftCoin, creationTime }
       }`, { onerror: err => appState.setError(appState, `Error while fetching trades: ${err}`)})
 
-    return <Box sx={{display: 'flex', flexDirection: 'column', alignContent:'stretch'}}>
-        <Link href="/trade/new" passHref>
-            <Button>Take new trade</Button>
-        </Link>
+    return <Box sx={{display: 'flex', flexDirection: 'column', alignItems:'center'}}>
+        <Link href="/trade/new" variant="contained">Take new trade</Link>
     {tradesLoading && <CircularProgress/>}
         <TableContainer component={Paper}>
             <Table size="small" aria-label="Trades table">
