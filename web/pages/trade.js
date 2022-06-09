@@ -8,7 +8,7 @@ import { useAppContext } from '../lib/appState'
 export default function Trade() {
     const [appState] = useAppContext()
     const { loading: tradesLoading, error: tradesError, data: tradesData } = useQuery(gql`{
-        trades { id, leftCoin, rightCoin, buyPrice, amountLeftCoin, creationTime }
+        trades { id, market, buyPrice, amountLeftCoin, creationTime }
       }`, { onerror: err => appState.setError(appState, `Error while fetching trades: ${err}`)})
 
     return <Box sx={{display: 'flex', flexDirection: 'column', alignItems:'center'}}>
@@ -30,7 +30,7 @@ export default function Trade() {
                         <TableRow
                             key={trade.id}>
                             <TableCell component="th" scope="row">{DateTime.fromMillis(Number(trade.creationTime)).toLocaleString()}</TableCell>
-                            <TableCell align="right">{trade.leftCoin}/{trade.rightCoin}</TableCell>
+                            <TableCell align="right">{trade.market}</TableCell>
                             <TableCell align="right">{trade.amountLeftCoin}</TableCell>
                             <TableCell align="right">{trade.buyPrice}</TableCell>
                         </TableRow>

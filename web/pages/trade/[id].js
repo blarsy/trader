@@ -20,7 +20,7 @@ export default function Trade() {
     const setControlError = (controlName, message) => setValidations({ ...validations, ...{ [controlName]: {...validations[controlName], ...{error: message}}}})
 
     const {loading: marketsLoading, error, data: marketsData} = useQuery(gql`{
-        markets { leftCoin, rightCoin }
+        markets { name }
       }`)
 
     const [createTrade, {data, loading: updating, error: createTradeError}] = useMutation(gql`mutation CreateTrade($trade: NewTrade!){
@@ -52,13 +52,12 @@ export default function Trade() {
             <FormControl required error={!!validations.coinpair.error || (!validations.pristine && !newTrade.coinpair)}>
                 <InputLabel id="label-coinpair">Coin pair</InputLabel>
                 <Select labelId="label-coinpair" size="small" label="Coin pair *"
-                    value={newTrade.coinpair ? newTrade.coinpair.leftCoin + '/' + newTrade.coinpair.rightCoin : ''} onChange={e => {
-                        const [leftCoin, rightCoin] = e.target.value.split('/')
-                        setNewTrade({...newTrade, ...{coinpair: {leftCoin, rightCoin }}})
+                    value={newTrade.market} onChange={e => {
+                        setNewTrade({...newTrade, ...{market: e.target.value}})
                 }}>
-                    {marketsData.markets.map(market => <MenuItem key={market.leftCoin + '/' + market.rightCoin} value={market.leftCoin + '/' + market.rightCoin}>{market.leftCoin + market.rightCoin}</MenuItem>)}
+                    {marketsData.markets.map(market => <MenuItem key={market} value={market}>{market}</MenuItem>)}
                 </Select>
-                { validations.coinpair.error && <FormHelperText>{validations.coinpair.error}</FormHelperText> }
+                { validations.coinpair.error && <FormHelperText>{validations.market.error}</FormHelperText> }
             </FormControl>
         }
         <TextField
@@ -100,8 +99,7 @@ export default function Trade() {
         <Button variant="outlined" disabled={updating} onClick={() => {
             if(isFormValid()) {
                 createTrade({ variables: { trade: { 
-                    leftCoin: newTrade.coinpair.leftCoin, 
-                    rightCoin: newTrade.coinpair.rightCoin,
+                    market: newTrade.market,
                     amountLeftCoin: Number(newTrade.amountLeftCoin),
                     marketBuy: newTrade.buyFromMarket,
                     buyPrice: Number(newTrade.buyPrice)

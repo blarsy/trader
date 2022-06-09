@@ -51,13 +51,19 @@ func (r *queryResolver) Trades(ctx context.Context) ([]*model.Trade, error) {
 	return trades, nil
 }
 
-func (r *queryResolver) Markets(ctx context.Context) ([]*model.Market, error) {
+func (r *queryResolver) Markets(ctx context.Context) ([]string, error) {
 	reqCtx := auth.ForContext(ctx)
-	markets, err := reqCtx.DataFacade.LocalFile.GetMarkets()
-	if err != nil {
-		return nil, err
-	}
-	return markets, nil
+	return reqCtx.DataFacade.LocalFile.GetMarkets(), nil
+}
+
+func (r *queryResolver) Prices(ctx context.Context) ([]*model.Price, error) {
+	// reqCtx := auth.ForContext(ctx)
+	// prices, err := reqCtx.DataFacade.Binance.GetPrices()
+	// if err != nil {
+	// 	return nil, err
+	// }
+	// return prices, nil
+	panic("Not implemented yet")
 }
 
 // Mutation returns generated.MutationResolver implementation.

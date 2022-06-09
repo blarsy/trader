@@ -16,16 +16,10 @@ type User {
 
 type Trade {
   id: ID!
-  leftCoin: String!
-  rightCoin: String!
+  market: String!
   amountLeftCoin: Float!
   creationTime: String!
   buyPrice: Float!
-}
-
-type Market {
-  leftCoin: String!
-  rightCoin: String!
 }
 
 type StopLossFollower {
@@ -36,14 +30,18 @@ type StopLossFollower {
   soldTime: String
 }
 
+type Price {
+  market: String!
+  price: Float
+}
+
 input NewSession {
   signature: String!,
   message: String!
 }
 
 input NewTrade {
-  leftCoin: String!
-  rightCoin: String!
+  market: String!
   amountLeftCoin: Float!
   marketBuy: Boolean!
   buyPrice: Float
@@ -57,7 +55,8 @@ input NewStopLossFollower {
 
 type Query {
   trades: [Trade!]!
-  markets: [Market!]!
+  markets: [String!]!
+  prices: [Price!]!
 }
 
 type Mutation {

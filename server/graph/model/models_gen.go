@@ -2,11 +2,6 @@
 
 package model
 
-type Market struct {
-	LeftCoin  string `json:"leftCoin"`
-	RightCoin string `json:"rightCoin"`
-}
-
 type NewSession struct {
 	Signature string `json:"signature"`
 	Message   string `json:"message"`
@@ -19,11 +14,15 @@ type NewStopLossFollower struct {
 }
 
 type NewTrade struct {
-	LeftCoin       string   `json:"leftCoin"`
-	RightCoin      string   `json:"rightCoin"`
+	Market         string   `json:"market"`
 	AmountLeftCoin float64  `json:"amountLeftCoin"`
 	MarketBuy      bool     `json:"marketBuy"`
 	BuyPrice       *float64 `json:"buyPrice"`
+}
+
+type Price struct {
+	Market string   `json:"market"`
+	Price  *float64 `json:"price"`
 }
 
 type StopLossFollower struct {
@@ -43,8 +42,7 @@ type Todo struct {
 
 type Trade struct {
 	ID             string  `json:"id"`
-	LeftCoin       string  `json:"leftCoin"`
-	RightCoin      string  `json:"rightCoin"`
+	Market         string  `json:"market"`
 	AmountLeftCoin float64 `json:"amountLeftCoin"`
 	CreationTime   string  `json:"creationTime"`
 	BuyPrice       float64 `json:"buyPrice"`

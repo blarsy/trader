@@ -44,19 +44,20 @@ type DirectiveRoot struct {
 }
 
 type ComplexityRoot struct {
-	Market struct {
-		LeftCoin  func(childComplexity int) int
-		RightCoin func(childComplexity int) int
-	}
-
 	Mutation struct {
 		CreateSession          func(childComplexity int, input model.NewSession) int
 		CreateStopLossFollower func(childComplexity int, input model.NewStopLossFollower) int
 		CreateTrade            func(childComplexity int, input *model.NewTrade) int
 	}
 
+	Price struct {
+		Market func(childComplexity int) int
+		Price  func(childComplexity int) int
+	}
+
 	Query struct {
 		Markets func(childComplexity int) int
+		Prices  func(childComplexity int) int
 		Trades  func(childComplexity int) int
 	}
 
@@ -80,8 +81,7 @@ type ComplexityRoot struct {
 		BuyPrice       func(childComplexity int) int
 		CreationTime   func(childComplexity int) int
 		ID             func(childComplexity int) int
-		LeftCoin       func(childComplexity int) int
-		RightCoin      func(childComplexity int) int
+		Market         func(childComplexity int) int
 	}
 
 	User struct {
@@ -97,7 +97,8 @@ type MutationResolver interface {
 }
 type QueryResolver interface {
 	Trades(ctx context.Context) ([]*model.Trade, error)
-	Markets(ctx context.Context) ([]*model.Market, error)
+	Markets(ctx context.Context) ([]string, error)
+	Prices(ctx context.Context) ([]*model.Price, error)
 }
 
 type executableSchema struct {
@@ -114,20 +115,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 	ec := executionContext{nil, e}
 	_ = ec
 	switch typeName + "." + field {
-
-	case "Market.leftCoin":
-		if e.complexity.Market.LeftCoin == nil {
-			break
-		}
-
-		return e.complexity.Market.LeftCoin(childComplexity), true
-
-	case "Market.rightCoin":
-		if e.complexity.Market.RightCoin == nil {
-			break
-		}
-
-		return e.complexity.Market.RightCoin(childComplexity), true
 
 	case "Mutation.createSession":
 		if e.complexity.Mutation.CreateSession == nil {
@@ -165,12 +152,33 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.CreateTrade(childComplexity, args["input"].(*model.NewTrade)), true
 
+	case "Price.market":
+		if e.complexity.Price.Market == nil {
+			break
+		}
+
+		return e.complexity.Price.Market(childComplexity), true
+
+	case "Price.price":
+		if e.complexity.Price.Price == nil {
+			break
+		}
+
+		return e.complexity.Price.Price(childComplexity), true
+
 	case "Query.markets":
 		if e.complexity.Query.Markets == nil {
 			break
 		}
 
 		return e.complexity.Query.Markets(childComplexity), true
+
+	case "Query.prices":
+		if e.complexity.Query.Prices == nil {
+			break
+		}
+
+		return e.complexity.Query.Prices(childComplexity), true
 
 	case "Query.trades":
 		if e.complexity.Query.Trades == nil {
@@ -270,19 +278,12 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Trade.ID(childComplexity), true
 
-	case "Trade.leftCoin":
-		if e.complexity.Trade.LeftCoin == nil {
+	case "Trade.market":
+		if e.complexity.Trade.Market == nil {
 			break
 		}
 
-		return e.complexity.Trade.LeftCoin(childComplexity), true
-
-	case "Trade.rightCoin":
-		if e.complexity.Trade.RightCoin == nil {
-			break
-		}
-
-		return e.complexity.Trade.RightCoin(childComplexity), true
+		return e.complexity.Trade.Market(childComplexity), true
 
 	case "User.id":
 		if e.complexity.User.ID == nil {
@@ -387,16 +388,10 @@ type User {
 
 type Trade {
   id: ID!
-  leftCoin: String!
-  rightCoin: String!
+  market: String!
   amountLeftCoin: Float!
   creationTime: String!
   buyPrice: Float!
-}
-
-type Market {
-  leftCoin: String!
-  rightCoin: String!
 }
 
 type StopLossFollower {
@@ -407,14 +402,18 @@ type StopLossFollower {
   soldTime: String
 }
 
+type Price {
+  market: String!
+  price: Float
+}
+
 input NewSession {
   signature: String!,
   message: String!
 }
 
 input NewTrade {
-  leftCoin: String!
-  rightCoin: String!
+  market: String!
   amountLeftCoin: Float!
   marketBuy: Boolean!
   buyPrice: Float
@@ -428,7 +427,8 @@ input NewStopLossFollower {
 
 type Query {
   trades: [Trade!]!
-  markets: [Market!]!
+  markets: [String!]!
+  prices: [Price!]!
 }
 
 type Mutation {
@@ -541,94 +541,6 @@ func (ec *executionContext) field___Type_fields_args(ctx context.Context, rawArg
 // endregion ************************** directives.gotpl **************************
 
 // region    **************************** field.gotpl *****************************
-
-func (ec *executionContext) _Market_leftCoin(ctx context.Context, field graphql.CollectedField, obj *model.Market) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Market_leftCoin(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.LeftCoin, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Market_leftCoin(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Market",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Market_rightCoin(ctx context.Context, field graphql.CollectedField, obj *model.Market) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Market_rightCoin(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.RightCoin, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Market_rightCoin(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Market",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
-}
 
 func (ec *executionContext) _Mutation_createSession(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Mutation_createSession(ctx, field)
@@ -807,6 +719,91 @@ func (ec *executionContext) fieldContext_Mutation_createStopLossFollower(ctx con
 	return fc, nil
 }
 
+func (ec *executionContext) _Price_market(ctx context.Context, field graphql.CollectedField, obj *model.Price) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Price_market(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Market, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Price_market(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Price",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Price_price(ctx context.Context, field graphql.CollectedField, obj *model.Price) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Price_price(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Price, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*float64)
+	fc.Result = res
+	return ec.marshalOFloat2ᚖfloat64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Price_price(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Price",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Float does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Query_trades(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Query_trades(ctx, field)
 	if err != nil {
@@ -848,10 +845,8 @@ func (ec *executionContext) fieldContext_Query_trades(ctx context.Context, field
 			switch field.Name {
 			case "id":
 				return ec.fieldContext_Trade_id(ctx, field)
-			case "leftCoin":
-				return ec.fieldContext_Trade_leftCoin(ctx, field)
-			case "rightCoin":
-				return ec.fieldContext_Trade_rightCoin(ctx, field)
+			case "market":
+				return ec.fieldContext_Trade_market(ctx, field)
 			case "amountLeftCoin":
 				return ec.fieldContext_Trade_amountLeftCoin(ctx, field)
 			case "creationTime":
@@ -891,9 +886,9 @@ func (ec *executionContext) _Query_markets(ctx context.Context, field graphql.Co
 		}
 		return graphql.Null
 	}
-	res := resTmp.([]*model.Market)
+	res := resTmp.([]string)
 	fc.Result = res
-	return ec.marshalNMarket2ᚕᚖblarsyᚋtraderServerᚋgraphᚋmodelᚐMarketᚄ(ctx, field.Selections, res)
+	return ec.marshalNString2ᚕstringᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_markets(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -903,13 +898,57 @@ func (ec *executionContext) fieldContext_Query_markets(ctx context.Context, fiel
 		IsMethod:   true,
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_prices(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_prices(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().Prices(rctx)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*model.Price)
+	fc.Result = res
+	return ec.marshalNPrice2ᚕᚖblarsyᚋtraderServerᚋgraphᚋmodelᚐPriceᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_prices(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
-			case "leftCoin":
-				return ec.fieldContext_Market_leftCoin(ctx, field)
-			case "rightCoin":
-				return ec.fieldContext_Market_rightCoin(ctx, field)
+			case "market":
+				return ec.fieldContext_Price_market(ctx, field)
+			case "price":
+				return ec.fieldContext_Price_price(ctx, field)
 			}
-			return nil, fmt.Errorf("no field named %q was found under type Market", field.Name)
+			return nil, fmt.Errorf("no field named %q was found under type Price", field.Name)
 		},
 	}
 	return fc, nil
@@ -1085,10 +1124,8 @@ func (ec *executionContext) fieldContext_StopLossFollower_trade(ctx context.Cont
 			switch field.Name {
 			case "id":
 				return ec.fieldContext_Trade_id(ctx, field)
-			case "leftCoin":
-				return ec.fieldContext_Trade_leftCoin(ctx, field)
-			case "rightCoin":
-				return ec.fieldContext_Trade_rightCoin(ctx, field)
+			case "market":
+				return ec.fieldContext_Trade_market(ctx, field)
 			case "amountLeftCoin":
 				return ec.fieldContext_Trade_amountLeftCoin(ctx, field)
 			case "creationTime":
@@ -1501,8 +1538,8 @@ func (ec *executionContext) fieldContext_Trade_id(ctx context.Context, field gra
 	return fc, nil
 }
 
-func (ec *executionContext) _Trade_leftCoin(ctx context.Context, field graphql.CollectedField, obj *model.Trade) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Trade_leftCoin(ctx, field)
+func (ec *executionContext) _Trade_market(ctx context.Context, field graphql.CollectedField, obj *model.Trade) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Trade_market(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -1515,7 +1552,7 @@ func (ec *executionContext) _Trade_leftCoin(ctx context.Context, field graphql.C
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.LeftCoin, nil
+		return obj.Market, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -1532,51 +1569,7 @@ func (ec *executionContext) _Trade_leftCoin(ctx context.Context, field graphql.C
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Trade_leftCoin(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Trade",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Trade_rightCoin(ctx context.Context, field graphql.CollectedField, obj *model.Trade) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Trade_rightCoin(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.RightCoin, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Trade_rightCoin(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Trade_market(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Trade",
 		Field:      field,
@@ -3661,19 +3654,11 @@ func (ec *executionContext) unmarshalInputNewTrade(ctx context.Context, obj inte
 
 	for k, v := range asMap {
 		switch k {
-		case "leftCoin":
+		case "market":
 			var err error
 
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("leftCoin"))
-			it.LeftCoin, err = ec.unmarshalNString2string(ctx, v)
-			if err != nil {
-				return it, err
-			}
-		case "rightCoin":
-			var err error
-
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("rightCoin"))
-			it.RightCoin, err = ec.unmarshalNString2string(ctx, v)
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("market"))
+			it.Market, err = ec.unmarshalNString2string(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -3714,41 +3699,6 @@ func (ec *executionContext) unmarshalInputNewTrade(ctx context.Context, obj inte
 // endregion ************************** interface.gotpl ***************************
 
 // region    **************************** object.gotpl ****************************
-
-var marketImplementors = []string{"Market"}
-
-func (ec *executionContext) _Market(ctx context.Context, sel ast.SelectionSet, obj *model.Market) graphql.Marshaler {
-	fields := graphql.CollectFields(ec.OperationContext, sel, marketImplementors)
-	out := graphql.NewFieldSet(fields)
-	var invalids uint32
-	for i, field := range fields {
-		switch field.Name {
-		case "__typename":
-			out.Values[i] = graphql.MarshalString("Market")
-		case "leftCoin":
-
-			out.Values[i] = ec._Market_leftCoin(ctx, field, obj)
-
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
-		case "rightCoin":
-
-			out.Values[i] = ec._Market_rightCoin(ctx, field, obj)
-
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
-		default:
-			panic("unknown field " + strconv.Quote(field.Name))
-		}
-	}
-	out.Dispatch()
-	if invalids > 0 {
-		return graphql.Null
-	}
-	return out
-}
 
 var mutationImplementors = []string{"Mutation"}
 
@@ -3796,6 +3746,38 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
+var priceImplementors = []string{"Price"}
+
+func (ec *executionContext) _Price(ctx context.Context, sel ast.SelectionSet, obj *model.Price) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, priceImplementors)
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("Price")
+		case "market":
+
+			out.Values[i] = ec._Price_market(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "price":
+
+			out.Values[i] = ec._Price_price(ctx, field, obj)
+
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -3859,6 +3841,29 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_markets(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx, innerFunc)
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return rrm(innerCtx)
+			})
+		case "prices":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_prices(ctx, field)
 				if res == graphql.Null {
 					atomic.AddUint32(&invalids, 1)
 				}
@@ -4014,16 +4019,9 @@ func (ec *executionContext) _Trade(ctx context.Context, sel ast.SelectionSet, ob
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
-		case "leftCoin":
+		case "market":
 
-			out.Values[i] = ec._Trade_leftCoin(ctx, field, obj)
-
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
-		case "rightCoin":
-
-			out.Values[i] = ec._Trade_rightCoin(ctx, field, obj)
+			out.Values[i] = ec._Trade_market(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
 				invalids++
@@ -4458,7 +4456,17 @@ func (ec *executionContext) marshalNID2string(ctx context.Context, sel ast.Selec
 	return res
 }
 
-func (ec *executionContext) marshalNMarket2ᚕᚖblarsyᚋtraderServerᚋgraphᚋmodelᚐMarketᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Market) graphql.Marshaler {
+func (ec *executionContext) unmarshalNNewSession2blarsyᚋtraderServerᚋgraphᚋmodelᚐNewSession(ctx context.Context, v interface{}) (model.NewSession, error) {
+	res, err := ec.unmarshalInputNewSession(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalNNewStopLossFollower2blarsyᚋtraderServerᚋgraphᚋmodelᚐNewStopLossFollower(ctx context.Context, v interface{}) (model.NewStopLossFollower, error) {
+	res, err := ec.unmarshalInputNewStopLossFollower(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNPrice2ᚕᚖblarsyᚋtraderServerᚋgraphᚋmodelᚐPriceᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Price) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -4482,7 +4490,7 @@ func (ec *executionContext) marshalNMarket2ᚕᚖblarsyᚋtraderServerᚋgraph�
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNMarket2ᚖblarsyᚋtraderServerᚋgraphᚋmodelᚐMarket(ctx, sel, v[i])
+			ret[i] = ec.marshalNPrice2ᚖblarsyᚋtraderServerᚋgraphᚋmodelᚐPrice(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -4502,24 +4510,14 @@ func (ec *executionContext) marshalNMarket2ᚕᚖblarsyᚋtraderServerᚋgraph�
 	return ret
 }
 
-func (ec *executionContext) marshalNMarket2ᚖblarsyᚋtraderServerᚋgraphᚋmodelᚐMarket(ctx context.Context, sel ast.SelectionSet, v *model.Market) graphql.Marshaler {
+func (ec *executionContext) marshalNPrice2ᚖblarsyᚋtraderServerᚋgraphᚋmodelᚐPrice(ctx context.Context, sel ast.SelectionSet, v *model.Price) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
 		}
 		return graphql.Null
 	}
-	return ec._Market(ctx, sel, v)
-}
-
-func (ec *executionContext) unmarshalNNewSession2blarsyᚋtraderServerᚋgraphᚋmodelᚐNewSession(ctx context.Context, v interface{}) (model.NewSession, error) {
-	res, err := ec.unmarshalInputNewSession(ctx, v)
-	return res, graphql.ErrorOnPath(ctx, err)
-}
-
-func (ec *executionContext) unmarshalNNewStopLossFollower2blarsyᚋtraderServerᚋgraphᚋmodelᚐNewStopLossFollower(ctx context.Context, v interface{}) (model.NewStopLossFollower, error) {
-	res, err := ec.unmarshalInputNewStopLossFollower(ctx, v)
-	return res, graphql.ErrorOnPath(ctx, err)
+	return ec._Price(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalNStopLossFollower2blarsyᚋtraderServerᚋgraphᚋmodelᚐStopLossFollower(ctx context.Context, sel ast.SelectionSet, v model.StopLossFollower) graphql.Marshaler {
@@ -4549,6 +4547,38 @@ func (ec *executionContext) marshalNString2string(ctx context.Context, sel ast.S
 		}
 	}
 	return res
+}
+
+func (ec *executionContext) unmarshalNString2ᚕstringᚄ(ctx context.Context, v interface{}) ([]string, error) {
+	var vSlice []interface{}
+	if v != nil {
+		vSlice = graphql.CoerceList(v)
+	}
+	var err error
+	res := make([]string, len(vSlice))
+	for i := range vSlice {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
+		res[i], err = ec.unmarshalNString2string(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
+}
+
+func (ec *executionContext) marshalNString2ᚕstringᚄ(ctx context.Context, sel ast.SelectionSet, v []string) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	for i := range v {
+		ret[i] = ec.marshalNString2string(ctx, sel, v[i])
+	}
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
 }
 
 func (ec *executionContext) marshalNTrade2ᚕᚖblarsyᚋtraderServerᚋgraphᚋmodelᚐTradeᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Trade) graphql.Marshaler {

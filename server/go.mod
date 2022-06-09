@@ -9,12 +9,14 @@ require (
 )
 
 require (
+	github.com/bitly/go-simplejson v0.5.0 // indirect
 	github.com/btcsuite/btcd/btcec/v2 v2.2.0 // indirect
 	github.com/decred/dcrd/dcrec/secp256k1/v4 v4.0.1 // indirect
 	golang.org/x/crypto v0.0.0-20210921155107-089bfa567519 // indirect
 )
 
 require (
+	github.com/adshao/go-binance/v2 v2.3.5
 	github.com/agnivade/levenshtein v1.1.1 // indirect
 	github.com/cpuguy83/go-md2man/v2 v2.0.1 // indirect
 	github.com/ethereum/go-ethereum v1.10.18
