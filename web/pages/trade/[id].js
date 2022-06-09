@@ -2,51 +2,79 @@ import { useState } from 'react'
 import { useRouter } from 'next/router'
 import { useQuery, gql, useMutation } from '@apollo/client'
 import { Checkbox, CircularProgress, MenuItem, Select, Stack, TextField, 
-    FormGroup, FormControlLabel, FormControl, InputLabel, Button } from '@mui/material'
+    FormGroup, FormControlLabel, FormControl, InputLabel, Button, filledInputClasses, FormHelperText } from '@mui/material'
+import { useAppContext } from '../../lib/appState'
 
 export default function Trade() {
     const router = useRouter()
     const { id } = router.query
     const [newTrade, setNewTrade] = useState({ amountLeftCoin: 0, buyPrice: 0, buyFromMarket: false})
-    const [validations, setValidations] = useState({})
+    const [appState] = useAppContext()
+
+    const [validations, setValidations] = useState({
+        pristine: true,
+        coinpair: { required: true },
+        amountLeftCoin: { required: true, float: true },
+        buyPrice: { float: true, customConstraint: state => state.buyFromMarket ? true : !!state.buyPrice}
+    })
+    const setControlError = (controlName, message) => setValidations({ ...validations, ...{ [controlName]: {...validations[controlName], ...{error: message}}}})
 
     const {loading: marketsLoading, error, data: marketsData} = useQuery(gql`{
         markets { leftCoin, rightCoin }
       }`)
 
+    const [createTrade, {data, loading: updating, error: createTradeError}] = useMutation(gql`mutation CreateTrade($trade: NewTrade!){
+        createTrade(input: $trade)
+      }`, { onError: err => {
+          appState.setError(appState, err.toString())
+        }})
+
+    const isFormValid = () => {
+        for(const propName in validations) {
+            if (validations[propName].required && !newTrade[propName]) {
+                return false
+            }
+            if (validations[propName].customConstraint && !validations[propName].customConstraint(newTrade)) {
+                return false
+            }
+            if (validations[propName].validationMessage) {
+                return false
+            }
+        }
+        return true
+    }
     if(id === "new") {
 
     }
     return <Stack spacing={2}>
         {marketsLoading && <CircularProgress/>} 
         {!marketsLoading && marketsData && 
-            <FormControl required>
+            <FormControl required error={!!validations.coinpair.error || (!validations.pristine && !newTrade.coinpair)}>
                 <InputLabel id="label-coinpair">Coin pair</InputLabel>
                 <Select labelId="label-coinpair" size="small" label="Coin pair *"
-                    value={newTrade.leftCoin ? newTrade.leftCoin + '/' + newTrade.rightCoin : ''} onChange={e => {
+                    value={newTrade.coinpair ? newTrade.coinpair.leftCoin + '/' + newTrade.coinpair.rightCoin : ''} onChange={e => {
                         const [leftCoin, rightCoin] = e.target.value.split('/')
-                        setNewTrade({...newTrade, ...{leftCoin, rightCoin}})
+                        setNewTrade({...newTrade, ...{coinpair: {leftCoin, rightCoin }}})
                 }}>
                     {marketsData.markets.map(market => <MenuItem key={market.leftCoin + '/' + market.rightCoin} value={market.leftCoin + '/' + market.rightCoin}>{market.leftCoin + market.rightCoin}</MenuItem>)}
                 </Select>
+                { validations.coinpair.error && <FormHelperText>{validations.coinpair.error}</FormHelperText> }
             </FormControl>
         }
         <TextField
             label="Amount coins" 
             required
             size="small" 
-            error={!!validations.amountLeftCoin}
-            helperText={validations.amountLeftCoin}
+            error={!!validations.amountLeftCoin.error || (!validations.pristine && !newTrade.amountLeftCoin)}
+            helperText={validations.amountLeftCoin.error}
             value={newTrade.amountLeftCoin} 
             onChange={e => {
                 setNewTrade({...newTrade, ...{amountLeftCoin: e.target.value}})
-                let validationMessage
                 if (isNaN(Number(e.target.value))) {
-                    validationMessage = 'Cannot convert value to a number.'
+                    setControlError('amountLeftCoin', 'Cannot convert value to a number.')
                 } else {
-                    validationMessage = ''                 
+                    setControlError('amountLeftCoin', '')              
                 }
-                setValidations({...validations, ...{ amountLeftCoin: validationMessage }})
             }}/>
         <FormGroup>
             <FormControlLabel control={<Checkbox size="small"
@@ -58,21 +86,29 @@ export default function Trade() {
             size="small"
             disabled={newTrade.buyFromMarket}
             required={!newTrade.buyFromMarket}
-            error={!!validations.buyPrice}
-            helperText={validations.buyPrice}
+            error={!!validations.buyPrice.error || (!validations.pristine && !newTrade.buyFromMarket && !newTrade.buyPrice)}
+            helperText={validations.buyPrice.error}
             value={newTrade.buyPrice}
             onChange={e => {
                 setNewTrade({...newTrade, ...{buyPrice: e.target.value}})
-                let validationMessage
                 if (isNaN(Number(e.target.value))) {
-                    validationMessage = 'Cannot convert value to a number.'
+                    setControlError('buyPrice', 'Cannot convert value to a number.')
                 } else {
-                    validationMessage = ''                 
+                    setControlError('buyPrice', '')
                 }
-                setValidations({...validations, ...{ buyPrice: validationMessage }})
             }}/>
-        <Button variant="outlined" disabled={validations != {}} onClick={() => {
-            console.log(newTrade)
-        }}>Ok</Button>
+        <Button variant="outlined" disabled={updating} onClick={() => {
+            if(isFormValid()) {
+                createTrade({ variables: { trade: { 
+                    leftCoin: newTrade.coinpair.leftCoin, 
+                    rightCoin: newTrade.coinpair.rightCoin,
+                    amountLeftCoin: Number(newTrade.amountLeftCoin),
+                    marketBuy: newTrade.buyFromMarket,
+                    buyPrice: Number(newTrade.buyPrice)
+                } }})
+            } else {
+                setValidations({...validations, ...{ pristine: false }})
+            }
+        }}>{updating && <CircularProgress/> }Ok</Button>
     </Stack>
 }

@@ -1,4 +1,30 @@
 {
-    "trades": [],
-    "markets": [["1INCH", "USDT"], ["AAVE", "USDT"]]
+  "markets": [
+    {
+      "LeftCoin": "1INCH",
+      "RightCoin": "USDT"
+    },
+    {
+      "LeftCoin": "AAVE",
+      "RightCoin": "USDT"
+    }
+  ],
+  "trades": [
+    {
+      "id": "4a479255-00a8-4045-b1c1-7a5a5d159207",
+      "leftCoin": "1INCH",
+      "rightCoin": "USDT",
+      "amountLeftCoin": 4,
+      "creationTime": 1654754962000,
+      "buyPrice": 4
+    },
+    {
+      "id": "4c150c6b-68bb-43cf-9756-04baf67cc0c4",
+      "leftCoin": "AAVE",
+      "rightCoin": "USDT",
+      "amountLeftCoin": 3,
+      "creationTime": 1654777445000,
+      "buyPrice": 3
+    }
+  ]
 }

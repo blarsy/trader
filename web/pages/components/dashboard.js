@@ -1,6 +1,7 @@
-import { Link, MenuItem, MenuList, Stack } from '@mui/material'
+import { MenuItem, MenuList, Stack } from '@mui/material'
 import { Box } from '@mui/system'
 import {useAppContext} from '../../lib/appState'
+import Link from './link'
 
 export default function Dashboard({ children }) {
     const [appState] = useAppContext()

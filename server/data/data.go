@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"strconv"
 	"time"
 
 	"github.com/google/uuid"
@@ -44,16 +45,16 @@ type MarketData struct {
 	RightCoin string
 }
 
-func (marketData *MarketData) UnmarshalJSON(data []byte) error {
-	var val []interface{}
-	if err := json.Unmarshal(data, &val); err != nil {
-		fmt.Printf("Error while decoding market data %v\n", err)
-		return err
-	}
-	marketData.LeftCoin = val[0].(string)
-	marketData.RightCoin = val[1].(string)
-	return nil
-}
+// func (marketData *MarketData) UnmarshalJSON(data []byte) error {
+// 	var val []interface{}
+// 	if err := json.Unmarshal(data, &val); err != nil {
+// 		fmt.Printf("Error while decoding market data %v\n", err)
+// 		return err
+// 	}
+// 	marketData.LeftCoin = val[0].(string)
+// 	marketData.RightCoin = val[1].(string)
+// 	return nil
+// }
 
 func (localFile *LocalFile) Init() {
 	err := localFile.loadFileContent(localFile.FileName)
@@ -70,7 +71,7 @@ func (localFile *LocalFile) GetTrades() ([]*model.Trade, error) {
 			RightCoin:      rawTrade.RightCoin,
 			ID:             string(rawTrade.Id),
 			AmountLeftCoin: rawTrade.AmountLeftCoin,
-			CreationTime:   string(rune(rawTrade.CreationTime)),
+			CreationTime:   strconv.FormatInt(rawTrade.CreationTime, 10),
 			BuyPrice:       rawTrade.BuyPrice,
 		})
 	}
