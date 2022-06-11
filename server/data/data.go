@@ -20,6 +20,9 @@ func (dataFacade *DataFacade) Init() {
 	var localFile = LocalFile{FileName: "./data/data.json"}
 	localFile.Init()
 	dataFacade.LocalFile = &localFile
+	var binance = BinanceFacade{}
+	binance.Init()
+	dataFacade.Binance = &binance
 }
 
 type LocalFile struct {

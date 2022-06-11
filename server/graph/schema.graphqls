@@ -35,6 +35,12 @@ type Price {
   price: Float
 }
 
+type Balance {
+  market: String!
+  coins: Float
+  free: Float
+}
+
 input NewSession {
   signature: String!,
   message: String!
@@ -56,7 +62,8 @@ input NewStopLossFollower {
 type Query {
   trades: [Trade!]!
   markets: [String!]!
-  prices: [Price!]!
+  prices(markets: [String]!): [Price!]!
+  balances: [Balance!]!
 }
 
 type Mutation {

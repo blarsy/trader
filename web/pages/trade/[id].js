@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/router'
 import { useQuery, gql, useMutation } from '@apollo/client'
 import { Checkbox, CircularProgress, MenuItem, Select, Stack, TextField, 
-    FormGroup, FormControlLabel, FormControl, InputLabel, Button, filledInputClasses, FormHelperText } from '@mui/material'
+    FormGroup, FormControlLabel, FormControl, InputLabel, Button, FormHelperText } from '@mui/material'
 import { useAppContext } from '../../lib/appState'
 
 export default function Trade() {
@@ -20,8 +20,11 @@ export default function Trade() {
     const setControlError = (controlName, message) => setValidations({ ...validations, ...{ [controlName]: {...validations[controlName], ...{error: message}}}})
 
     const {loading: marketsLoading, error, data: marketsData} = useQuery(gql`{
-        markets { name }
+        markets
       }`)
+    const {loading: accountLoading, error: accountLoadError, data: accountData} = useQuery(gql`{
+        balances { market, coins }
+    }`)
 
     const [createTrade, {data, loading: updating, error: createTradeError}] = useMutation(gql`mutation CreateTrade($trade: NewTrade!){
         createTrade(input: $trade)

@@ -2,6 +2,12 @@
 
 package model
 
+type Balance struct {
+	Market string   `json:"market"`
+	Coins  *float64 `json:"coins"`
+	Free   *float64 `json:"free"`
+}
+
 type NewSession struct {
 	Signature string `json:"signature"`
 	Message   string `json:"message"`
