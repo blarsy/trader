@@ -58,7 +58,7 @@ func (BinanceFacade *BinanceFacade) GetBalances(ctx context.Context) ([]*model.B
 			return nil, err
 		}
 		coins := free + locked
-		balance := model.Balance{Market: balanceData.Asset, Free: &free, Coins: &coins}
+		balance := model.Balance{Coin: balanceData.Asset, Free: &free, AmountCoins: &coins}
 		result[i] = &balance
 	}
 

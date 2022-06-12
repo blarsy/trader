@@ -30,14 +30,19 @@ type StopLossFollower {
   soldTime: String
 }
 
+type Market {
+  coin: String!
+  pair: String!
+}
+
 type Price {
   market: String!
   price: Float
 }
 
 type Balance {
-  market: String!
-  coins: Float
+  coin: String!
+  amountCoins: Float
   free: Float
 }
 
@@ -61,7 +66,7 @@ input NewStopLossFollower {
 
 type Query {
   trades: [Trade!]!
-  markets: [String!]!
+  markets: [Market!]!
   prices(markets: [String]!): [Price!]!
   balances: [Balance!]!
 }

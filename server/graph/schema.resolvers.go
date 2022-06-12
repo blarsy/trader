@@ -51,9 +51,9 @@ func (r *queryResolver) Trades(ctx context.Context) ([]*model.Trade, error) {
 	return trades, nil
 }
 
-func (r *queryResolver) Markets(ctx context.Context) ([]string, error) {
+func (r *queryResolver) Markets(ctx context.Context) ([]*model.Market, error) {
 	reqCtx := auth.ForContext(ctx)
-	return reqCtx.DataFacade.LocalFile.GetMarkets(), nil
+	return reqCtx.DataFacade.LocalFile.GetMarkets()
 }
 
 func (r *queryResolver) Prices(ctx context.Context, markets []*string) ([]*model.Price, error) {

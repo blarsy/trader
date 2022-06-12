@@ -1,4 +1,56 @@
 {
-  "markets": ["1INCHUSDT","AAVEUSDT"],
-  "trades": []
+  "markets": [
+    {
+      "coin": "1INCH",
+      "pair": "1INCHUSDT"
+    },
+    {
+      "coin": "AAVE",
+      "pair": "AAVEUSDT"
+    }
+  ],
+  "trades": [
+    {
+      "id": "da015452-2873-4f21-a133-2078979e71f6",
+      "market": "AAVEUSDT",
+      "amountLeftCoin": 4,
+      "creationTime": 1655050910000,
+      "buyPrice": 4
+    },
+    {
+      "id": "be59a9bf-682a-4694-8c34-c358a5718c5f",
+      "market": "AAVEUSDT",
+      "amountLeftCoin": 3,
+      "creationTime": 1655051016000,
+      "buyPrice": 2
+    },
+    {
+      "id": "fdacf237-964c-4180-89b0-dee6a5a2f0a3",
+      "market": "1INCHUSDT",
+      "amountLeftCoin": 5,
+      "creationTime": 1655051382000,
+      "buyPrice": 2
+    },
+    {
+      "id": "57596be9-18f7-421f-8098-ac90e0dd32b3",
+      "market": "1INCHUSDT",
+      "amountLeftCoin": 3.234,
+      "creationTime": 1655055541000,
+      "buyPrice": 0.345
+    },
+    {
+      "id": "5641ad91-63b0-47d9-b8aa-9691afdfba11",
+      "market": "1INCHUSDT",
+      "amountLeftCoin": 0.34,
+      "creationTime": 1655055757000,
+      "buyPrice": 0.43
+    },
+    {
+      "id": "c4d69d4e-8055-450a-a48c-9452a06da467",
+      "market": "1INCHUSDT",
+      "amountLeftCoin": 0.34,
+      "creationTime": 1655056349000,
+      "buyPrice": 0.56
+    }
+  ]
 }

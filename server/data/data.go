@@ -31,8 +31,8 @@ type LocalFile struct {
 }
 
 type RootData struct {
-	Markets []string    `json:"markets"`
-	Trades  []TradeData `json:"trades"`
+	Markets []MarketData `json:"markets"`
+	Trades  []TradeData  `json:"trades"`
 }
 
 type TradeData struct {
@@ -41,6 +41,11 @@ type TradeData struct {
 	AmountLeftCoin float64 `json:"amountLeftCoin"`
 	CreationTime   int64   `json:"creationTime"`
 	BuyPrice       float64 `json:"buyPrice"`
+}
+
+type MarketData struct {
+	Coin string `json:"coin"`
+	Pair string `json:"pair"`
 }
 
 func (localFile *LocalFile) Init() {
@@ -81,8 +86,15 @@ func (localFile *LocalFile) CreateTrade(newTrade *model.NewTrade) (string, error
 	return id, nil
 }
 
-func (localFile *LocalFile) GetMarkets() []string {
-	return localFile.FileContent.Markets
+func (localFile *LocalFile) GetMarkets() ([]*model.Market, error) {
+	result := make([]*model.Market, 0, len(localFile.FileContent.Markets))
+	for _, rawMarket := range localFile.FileContent.Markets {
+		result = append(result, &model.Market{
+			Coin: rawMarket.Coin,
+			Pair: rawMarket.Pair,
+		})
+	}
+	return result, nil
 }
 
 func (localFile *LocalFile) loadFileContent(fileName string) error {

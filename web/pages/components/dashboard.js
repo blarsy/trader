@@ -17,7 +17,7 @@ export default function Dashboard({ children }) {
     ]
     return <Stack direction="row">
         <MenuList sx={{display: 'flex', flexDirection: 'column', justifyContent: 'stretch', alignContent: 'stretch'}}>
-            {routes.map(route => <MenuItem component={Link} href={route.path}>{route.title}{router.pathname.toLocaleLowerCase() === route.path && <ArrowRight/>}</MenuItem>)}
+            {routes.map(route => <MenuItem key={route.path} component={Link} href={route.path}>{route.title}{router.pathname.toLocaleLowerCase() === route.path && <ArrowRight/>}</MenuItem>)}
         </MenuList>
         <Box sx={{display: 'flex', flexDirection: 'column', justifyContent: 'stretch', flexGrow: 1}}>
             {children}

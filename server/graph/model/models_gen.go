@@ -3,9 +3,14 @@
 package model
 
 type Balance struct {
-	Market string   `json:"market"`
-	Coins  *float64 `json:"coins"`
-	Free   *float64 `json:"free"`
+	Coin        string   `json:"coin"`
+	AmountCoins *float64 `json:"amountCoins"`
+	Free        *float64 `json:"free"`
+}
+
+type Market struct {
+	Coin string `json:"coin"`
+	Pair string `json:"pair"`
 }
 
 type NewSession struct {

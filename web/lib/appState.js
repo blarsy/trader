@@ -25,12 +25,13 @@ export function AppWrapper({ children }) {
               signer,
               sessionId: res.createSession,
               autoConnecting: false, 
-              errorMsg: null, buttonAction: null, buttonCaption: null
+              feedbackMsg: null, buttonAction: null, buttonCaption: null
             })
           },
           onError: err =>  mergeWithState(state, { 
             autoConnecting: false, 
-            errorMsg: `There was a failure connecting to our backend.\n${err}`,
+
+            feedbackMsg: `There was a failure connecting to our backend.\n${err}`,
             buttonCaption: 'Try again', buttonAction: tryConnect,
             triedConnecting: true // Prevents endlessly retrying to connect
           })
@@ -39,7 +40,8 @@ export function AppWrapper({ children }) {
         console.log(ex)
         mergeWithState(state, { 
           autoConnecting: false, 
-          errorMsg: 'There was a failure connecting to our backend.',
+          feedbackType: 'error',
+          feedbackMsg: 'There was a failure connecting to our backend.',
           buttonCaption: 'Try again', buttonAction: tryConnect,
           triedConnecting: true // Prevents endlessly retrying to connect
         })
@@ -55,22 +57,23 @@ export function AppWrapper({ children }) {
       signer,
       sessionId: localStorage.getItem('sessionId'),
       autoConnecting: false, 
-      errorMsg: null, buttonAction: null, buttonCaption: null
+      feedbackMsg: null, buttonAction: null, buttonCaption: null
     })
   }
 
   const mergeWithState = (oldState, newState) => {
     setState({...oldState, ...newState})
   }
-  const setError = (oldState, msg, buttonCaption, buttonAction) => {
-    const errorData = {
-      errorMsg: msg
+  const setFeedback = (oldState, type, msg, buttonCaption, buttonAction) => {
+    const feedbackData = {
+      feedbackMsg: msg,
+      feedbackType: type
     }
     if(buttonCaption && buttonAction) {
-      errorData.buttonCaption = buttonCaption
-      errorData.buttonAction = buttonAction
+      feedbackData.buttonCaption = buttonCaption
+      feedbackData.buttonAction = buttonAction
     }
-    mergeWithState(oldState, errorData)
+    mergeWithState(oldState, feedbackData)
   }
 
   const ensureWalletInitialized = async () => {
@@ -90,7 +93,7 @@ export function AppWrapper({ children }) {
     tryConnect,
     mergeWithState,
     autoConnecting:false,
-    setError
+    setFeedback
   })
   const [createSession, {sessionData, processing}] = useMutation(gql`mutation CreateSession($signature: String!, $message: String!){
     createSession(input: {signature: $signature, message: $message})
@@ -102,7 +105,7 @@ export function AppWrapper({ children }) {
     }
   }, [])
 
-  const dismissErrorMsg = () => setError(state)
+  const dismissFeedbackMsg = () => setFeedback(state)
 
   return (
     <AppContext.Provider value={[state, setState]}>
@@ -112,12 +115,12 @@ export function AppWrapper({ children }) {
             <CircularProgress color="inherit" />
         </Backdrop>
         <Snackbar
-          open={!!state.errorMsg}
+          open={!!state.feedbackMsg}
           autoHideDuration={60000}
-          onClose={dismissErrorMsg}
-          message={state.errorMsg}>
-          <Alert onClose={dismissErrorMsg} severity="error">
-              {state.errorMsg}
+          onClose={dismissFeedbackMsg}
+          message={state.feedbackMsg}>
+          <Alert onClose={dismissFeedbackMsg} severity={state.feedbackType || 'error'}>
+              {state.feedbackMsg}
               {state.buttonCaption && <Button color="secondary" size="small" onClick={state.buttonAction}>
                 {state.buttonCaption}
               </Button>}
