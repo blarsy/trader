@@ -31,8 +31,8 @@ func (binanceFacade *BinanceFacade) Init() error {
 	return nil
 }
 
-func (binanceFacade *BinanceFacade) GetPrices(ctx context.Context, markets []*string) ([]*model.Price, error) {
-	outputChannel := binanceFacade.executionQueue.QueueOperation(binanceFacade.getPrices, ctx, &markets)
+func (binanceFacade *BinanceFacade) GetPrices(ctx context.Context, markets []*string, market *string) ([]*model.Price, error) {
+	outputChannel := binanceFacade.executionQueue.QueueOperation(binanceFacade.getPrices, ctx, &markets, market)
 	result := <-outputChannel
 	if result.Error != nil {
 		return nil, result.Error
@@ -42,10 +42,22 @@ func (binanceFacade *BinanceFacade) GetPrices(ctx context.Context, markets []*st
 
 func (binanceFacade *BinanceFacade) getPrices(input []interface{}) (interface{}, error) {
 	service := binanceFacade.client.NewListPricesService()
-	prices, err := service.Symbols(*input[1].(*[]*string)).Do(input[0].(context.Context))
-	if err != nil {
-		return nil, err
+	var prices []*binance.SymbolPrice
+	var err error
+	context := input[0].(context.Context)
+	symbols := *input[1].(*[]*string)
+	if len(symbols) > 0 {
+		prices, err = service.Symbols(symbols).Do(context)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		prices, err = service.Symbol(*input[2].(*string)).Do(context)
+		if err != nil {
+			return nil, err
+		}
 	}
+
 	result := make([]*model.Price, len(prices))
 	for i, priceData := range prices {
 		price, err := strconv.ParseFloat(priceData.Price, 64)

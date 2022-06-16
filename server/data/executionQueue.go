@@ -33,12 +33,13 @@ func loopQueue(ticker *time.Ticker, queue *ExecutionQueue) {
 		if len(queue.ops) > 0 {
 			queue.lock.Lock()
 			operation := queue.ops[0]
-			fmt.Printf("%s : Calling operation with input %d parameters, %d operations will remain in queue\n", now, len(operation.input.([]interface{})), len(queue.ops)-1)
 			output, err := operation.function(operation.input.([]interface{}))
 			operation.channel <- &OperationResult{Output: output, Error: err}
 			queue.ops = queue.ops[1:]
 			queue.lock.Unlock()
-			fmt.Printf("Dequeued and executed an operation which ended ended with error return %+v", err)
+			if err != nil {
+				fmt.Printf("%s: Dequeued and executed an operation with %d parameters, which ended ended with error return %+v", now, len(operation.input.([]interface{})), err)
+			}
 		}
 	}
 }

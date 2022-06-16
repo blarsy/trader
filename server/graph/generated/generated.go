@@ -69,7 +69,7 @@ type ComplexityRoot struct {
 	Query struct {
 		Balances func(childComplexity int) int
 		Markets  func(childComplexity int) int
-		Prices   func(childComplexity int, markets []*string) int
+		Prices   func(childComplexity int, markets []*string, market *string) int
 		Trades   func(childComplexity int, id *string) int
 	}
 
@@ -110,7 +110,7 @@ type MutationResolver interface {
 type QueryResolver interface {
 	Trades(ctx context.Context, id *string) ([]*model.Trade, error)
 	Markets(ctx context.Context) ([]*model.Market, error)
-	Prices(ctx context.Context, markets []*string) ([]*model.Price, error)
+	Prices(ctx context.Context, markets []*string, market *string) ([]*model.Price, error)
 	Balances(ctx context.Context) ([]*model.Balance, error)
 }
 
@@ -238,7 +238,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Query.Prices(childComplexity, args["markets"].([]*string)), true
+		return e.complexity.Query.Prices(childComplexity, args["markets"].([]*string), args["market"].(*string)), true
 
 	case "Query.trades":
 		if e.complexity.Query.Trades == nil {
@@ -504,7 +504,7 @@ input NewStopLossFollower {
 type Query {
   trades(id: ID): [Trade!]!
   markets: [Market!]!
-  prices(markets: [String]!): [Price!]!
+  prices(markets: [String], market: String): [Price!]!
   balances: [Balance!]!
 }
 
@@ -587,12 +587,21 @@ func (ec *executionContext) field_Query_prices_args(ctx context.Context, rawArgs
 	var arg0 []*string
 	if tmp, ok := rawArgs["markets"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("markets"))
-		arg0, err = ec.unmarshalNString2ᚕᚖstring(ctx, tmp)
+		arg0, err = ec.unmarshalOString2ᚕᚖstring(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
 	args["markets"] = arg0
+	var arg1 *string
+	if tmp, ok := rawArgs["market"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("market"))
+		arg1, err = ec.unmarshalOString2ᚖstring(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["market"] = arg1
 	return args, nil
 }
 
@@ -1256,7 +1265,7 @@ func (ec *executionContext) _Query_prices(ctx context.Context, field graphql.Col
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().Prices(rctx, fc.Args["markets"].([]*string))
+		return ec.resolvers.Query().Prices(rctx, fc.Args["markets"].([]*string), fc.Args["market"].(*string))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -5152,32 +5161,6 @@ func (ec *executionContext) marshalNString2string(ctx context.Context, sel ast.S
 	return res
 }
 
-func (ec *executionContext) unmarshalNString2ᚕᚖstring(ctx context.Context, v interface{}) ([]*string, error) {
-	var vSlice []interface{}
-	if v != nil {
-		vSlice = graphql.CoerceList(v)
-	}
-	var err error
-	res := make([]*string, len(vSlice))
-	for i := range vSlice {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
-		res[i], err = ec.unmarshalOString2ᚖstring(ctx, vSlice[i])
-		if err != nil {
-			return nil, err
-		}
-	}
-	return res, nil
-}
-
-func (ec *executionContext) marshalNString2ᚕᚖstring(ctx context.Context, sel ast.SelectionSet, v []*string) graphql.Marshaler {
-	ret := make(graphql.Array, len(v))
-	for i := range v {
-		ret[i] = ec.marshalOString2ᚖstring(ctx, sel, v[i])
-	}
-
-	return ret
-}
-
 func (ec *executionContext) marshalNTrade2ᚕᚖblarsyᚋtraderServerᚋgraphᚋmodelᚐTradeᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Trade) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
@@ -5559,6 +5542,38 @@ func (ec *executionContext) unmarshalONewTrade2ᚖblarsyᚋtraderServerᚋgraph�
 	}
 	res, err := ec.unmarshalInputNewTrade(ctx, v)
 	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalOString2ᚕᚖstring(ctx context.Context, v interface{}) ([]*string, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var vSlice []interface{}
+	if v != nil {
+		vSlice = graphql.CoerceList(v)
+	}
+	var err error
+	res := make([]*string, len(vSlice))
+	for i := range vSlice {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
+		res[i], err = ec.unmarshalOString2ᚖstring(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
+}
+
+func (ec *executionContext) marshalOString2ᚕᚖstring(ctx context.Context, sel ast.SelectionSet, v []*string) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	ret := make(graphql.Array, len(v))
+	for i := range v {
+		ret[i] = ec.marshalOString2ᚖstring(ctx, sel, v[i])
+	}
+
+	return ret
 }
 
 func (ec *executionContext) unmarshalOString2ᚖstring(ctx context.Context, v interface{}) (*string, error) {

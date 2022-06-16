@@ -67,7 +67,7 @@ input NewStopLossFollower {
 type Query {
   trades(id: ID): [Trade!]!
   markets: [Market!]!
-  prices(markets: [String]!): [Price!]!
+  prices(markets: [String], market: String): [Price!]!
   balances: [Balance!]!
 }
 
