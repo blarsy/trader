@@ -42,9 +42,9 @@ func (r *mutationResolver) CreateStopLossFollower(ctx context.Context, input mod
 	panic(fmt.Errorf("not implemented"))
 }
 
-func (r *queryResolver) Trades(ctx context.Context) ([]*model.Trade, error) {
+func (r *queryResolver) Trades(ctx context.Context, id *string) ([]*model.Trade, error) {
 	reqCtx := auth.ForContext(ctx)
-	trades, err := reqCtx.DataFacade.LocalFile.GetTrades()
+	trades, err := reqCtx.DataFacade.LocalFile.GetTrades(id)
 	if err != nil {
 		return nil, err
 	}

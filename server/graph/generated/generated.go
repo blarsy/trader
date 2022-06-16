@@ -70,7 +70,7 @@ type ComplexityRoot struct {
 		Balances func(childComplexity int) int
 		Markets  func(childComplexity int) int
 		Prices   func(childComplexity int, markets []*string) int
-		Trades   func(childComplexity int) int
+		Trades   func(childComplexity int, id *string) int
 	}
 
 	StopLossFollower struct {
@@ -108,7 +108,7 @@ type MutationResolver interface {
 	CreateStopLossFollower(ctx context.Context, input model.NewStopLossFollower) (*model.StopLossFollower, error)
 }
 type QueryResolver interface {
-	Trades(ctx context.Context) ([]*model.Trade, error)
+	Trades(ctx context.Context, id *string) ([]*model.Trade, error)
 	Markets(ctx context.Context) ([]*model.Market, error)
 	Prices(ctx context.Context, markets []*string) ([]*model.Price, error)
 	Balances(ctx context.Context) ([]*model.Balance, error)
@@ -245,7 +245,12 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		return e.complexity.Query.Trades(childComplexity), true
+		args, err := ec.field_Query_trades_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.Trades(childComplexity, args["id"].(*string)), true
 
 	case "StopLossFollower.currentStopLossPrice":
 		if e.complexity.StopLossFollower.CurrentStopLossPrice == nil {
@@ -497,7 +502,7 @@ input NewStopLossFollower {
 }
 
 type Query {
-  trades: [Trade!]!
+  trades(id: ID): [Trade!]!
   markets: [Market!]!
   prices(markets: [String]!): [Price!]!
   balances: [Balance!]!
@@ -588,6 +593,21 @@ func (ec *executionContext) field_Query_prices_args(ctx context.Context, rawArgs
 		}
 	}
 	args["markets"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_trades_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 *string
+	if tmp, ok := rawArgs["id"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+		arg0, err = ec.unmarshalOID2ᚖstring(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["id"] = arg0
 	return args, nil
 }
 
@@ -1119,7 +1139,7 @@ func (ec *executionContext) _Query_trades(ctx context.Context, field graphql.Col
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().Trades(rctx)
+		return ec.resolvers.Query().Trades(rctx, fc.Args["id"].(*string))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -1157,6 +1177,17 @@ func (ec *executionContext) fieldContext_Query_trades(ctx context.Context, field
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Trade", field.Name)
 		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_trades_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
 	}
 	return fc, nil
 }
@@ -5504,6 +5535,22 @@ func (ec *executionContext) marshalOFloat2ᚖfloat64(ctx context.Context, sel as
 	}
 	res := graphql.MarshalFloatContext(*v)
 	return graphql.WrapContextMarshaler(ctx, res)
+}
+
+func (ec *executionContext) unmarshalOID2ᚖstring(ctx context.Context, v interface{}) (*string, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := graphql.UnmarshalID(v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalOID2ᚖstring(ctx context.Context, sel ast.SelectionSet, v *string) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	res := graphql.MarshalID(*v)
+	return res
 }
 
 func (ec *executionContext) unmarshalONewTrade2ᚖblarsyᚋtraderServerᚋgraphᚋmodelᚐNewTrade(ctx context.Context, v interface{}) (*model.NewTrade, error) {

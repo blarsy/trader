@@ -61,16 +61,33 @@ func (localFile *LocalFile) Init() {
 
 }
 
-func (localFile *LocalFile) GetTrades() ([]*model.Trade, error) {
-	result := make([]*model.Trade, 0, len(localFile.FileContent.Trades))
-	for _, rawTrade := range localFile.FileContent.Trades {
-		result = append(result, &model.Trade{
-			Market:         rawTrade.Market,
-			ID:             string(rawTrade.Id),
-			AmountLeftCoin: rawTrade.AmountLeftCoin,
-			CreationTime:   strconv.FormatInt(rawTrade.CreationTime, 10),
-			BuyPrice:       rawTrade.BuyPrice,
-		})
+func (localFile *LocalFile) GetTrades(id *string) ([]*model.Trade, error) {
+	var result []*model.Trade
+
+	if id != nil {
+		for _, rawTrade := range localFile.FileContent.Trades {
+			if rawTrade.Id == *id {
+				result = []*model.Trade{{
+					Market:         rawTrade.Market,
+					ID:             string(rawTrade.Id),
+					AmountLeftCoin: rawTrade.AmountLeftCoin,
+					CreationTime:   strconv.FormatInt(rawTrade.CreationTime, 10),
+					BuyPrice:       rawTrade.BuyPrice,
+				}}
+				break
+			}
+		}
+	} else {
+		result = make([]*model.Trade, 0, len(localFile.FileContent.Trades))
+		for _, rawTrade := range localFile.FileContent.Trades {
+			result = append(result, &model.Trade{
+				Market:         rawTrade.Market,
+				ID:             string(rawTrade.Id),
+				AmountLeftCoin: rawTrade.AmountLeftCoin,
+				CreationTime:   strconv.FormatInt(rawTrade.CreationTime, 10),
+				BuyPrice:       rawTrade.BuyPrice,
+			})
+		}
 	}
 	return result, nil
 }
