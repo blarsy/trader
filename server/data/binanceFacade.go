@@ -10,7 +10,8 @@ import (
 )
 
 type BinanceFacade struct {
-	client *binance.Client
+	client         *binance.Client
+	executionQueue *ExecutionQueue
 }
 
 func (binanceFacade *BinanceFacade) Init() error {
@@ -20,12 +21,28 @@ func (binanceFacade *BinanceFacade) Init() error {
 	}
 	keys := strings.Split(string(content), "\n")
 	binanceFacade.client = binance.NewClient(keys[0], keys[1])
+
+	var queue = ExecutionQueue{}
+	queueInitErr := queue.Init(2000)
+	if queueInitErr != nil {
+		return queueInitErr
+	}
+	binanceFacade.executionQueue = &queue
 	return nil
 }
 
 func (binanceFacade *BinanceFacade) GetPrices(ctx context.Context, markets []*string) ([]*model.Price, error) {
+	outputChannel := binanceFacade.executionQueue.QueueOperation(binanceFacade.getPrices, ctx, &markets)
+	result := <-outputChannel
+	if result.Error != nil {
+		return nil, result.Error
+	}
+	return result.Output.([]*model.Price), nil
+}
+
+func (binanceFacade *BinanceFacade) getPrices(input []interface{}) (interface{}, error) {
 	service := binanceFacade.client.NewListPricesService()
-	prices, err := service.Symbols(markets).Do(ctx)
+	prices, err := service.Symbols(*input[1].(*[]*string)).Do(input[0].(context.Context))
 	if err != nil {
 		return nil, err
 	}
@@ -41,8 +58,17 @@ func (binanceFacade *BinanceFacade) GetPrices(ctx context.Context, markets []*st
 }
 
 func (BinanceFacade *BinanceFacade) GetBalances(ctx context.Context) ([]*model.Balance, error) {
+	outputChannel := BinanceFacade.executionQueue.QueueOperation(BinanceFacade.getBalances, ctx)
+	result := <-outputChannel
+	if result.Error != nil {
+		return nil, result.Error
+	}
+	return result.Output.([]*model.Balance), nil
+}
+
+func (BinanceFacade *BinanceFacade) getBalances(input []interface{}) (interface{}, error) {
 	service := BinanceFacade.client.NewGetAccountService()
-	account, err := service.Do(ctx)
+	account, err := service.Do(input[0].(context.Context))
 	if err != nil {
 		return nil, err
 	}

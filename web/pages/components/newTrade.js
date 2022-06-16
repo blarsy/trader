@@ -50,17 +50,21 @@ export default function NewTrade() {
     {marketsData && accountData && (() => {
         const marketOptions = marketsData.markets.map(market => {
             const balance = accountData.balances.find(balance => balance.coin === market.coin)
+            if(!balance) return {label: market.pair, free: 0, amountCoins: 0}
             return {label: market.pair, free: balance.free, amountCoins: balance.amountCoins}
         })
         return <FormControl required error={!!validations.market.error || (!validations.pristine && !newTrade.market)}>
             <Autocomplete
                 options={marketOptions} 
+                disablePortal
                 renderInput={params => <TextField {...params} error={!!validations.market.error || (!validations.pristine && !newTrade.market)} label="Coin pair" required/>}
                 value={newTrade.market}
                 isOptionEqualToValue={(option, value) => option.label === value}
                 renderOption={(props, option) => (
-                    <Box key={option.label} component="li" {...props} sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between'}}>
-                        <span>{option.label}</span><Chip label={`${option.free} free of ${option.amountCoins}`}/>
+                    <Box key={option.label} component="li" {...props} sx={{ display: 'flex'}}>
+                        <Box sx={{display: 'flex', flexGrow: '1', alignItems: 'center', justifyContent: 'space-between' }}>
+                            <span>{option.label}</span><Chip label={`${option.free} free of ${option.amountCoins}`}/>
+                        </Box>
                     </Box>
                 )}
                 onChange={(e, newValue) => {

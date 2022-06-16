@@ -26,7 +26,10 @@ func Start() {
 	}
 
 	dataFacade := data.DataFacade{}
-	dataFacade.Init()
+	dataInitErr := dataFacade.Init()
+	if dataInitErr != nil {
+		log.Panicf("Error initializing data facade. %s", dataInitErr)
+	}
 
 	router := chi.NewRouter()
 

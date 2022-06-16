@@ -16,13 +16,18 @@ type DataFacade struct {
 	Binance   *BinanceFacade
 }
 
-func (dataFacade *DataFacade) Init() {
+func (dataFacade *DataFacade) Init() error {
 	var localFile = LocalFile{FileName: "./data/data.json"}
 	localFile.Init()
 	dataFacade.LocalFile = &localFile
+
 	var binance = BinanceFacade{}
-	binance.Init()
+	binanceInitErr := binance.Init()
+	if binanceInitErr != nil {
+		return binanceInitErr
+	}
 	dataFacade.Binance = &binance
+	return nil
 }
 
 type LocalFile struct {
@@ -53,6 +58,7 @@ func (localFile *LocalFile) Init() {
 	if err != nil {
 		panic(fmt.Errorf("error loading data file: %v", err))
 	}
+
 }
 
 func (localFile *LocalFile) GetTrades() ([]*model.Trade, error) {
